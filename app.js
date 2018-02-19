@@ -1,116 +1,100 @@
+// Import the letter.js module.
+var letter = require("./letter");
+// Import the inquirer module to get input from the user.
 var inquirer = require("inquirer");
-var words = ['doggy','kitty'];
-var randomWord = words[Math.floor(Math.random()*words.length)];
-var dogArray = 'doggy'.split('');
-var catArray = 'kitty'.split('');
-//console.log(randomWord);
-var underscores = '_ _ _ _ _'
-var underscoresArray = underscores.split(" ");
-//console.log(underscoresArray);
-var attempts = 5;
-var counter = function(){
- 	console.log("Incorrect. "+ attempts + " attempts remaining.");
- 	playGame();
+// Initialize guesses to 10.
+var guesses = 10;
+// Initialize an array of letters the user has guessed.
+var lettersGuessed = [];
+
+function playGame(guesses) {
+	// If the user has guesses remaining, keep playing!
+	if (guesses !== 0) {
+		inquirer
+			// Get the user input.
+			.prompt([
+				{
+					type: "input",
+					message: "Guess a letter: ",
+					name: "letter"
+				}
+			])
+			// Determine what we do once we have the input.
+			.then(answers => {
+				// Convert to upper case for display.
+				var answer = answers.letter.toUpperCase();
+
+				// If the letter has not been guessed yet...
+				if (lettersGuessed.indexOf(answer) === -1) {
+					// Create a new letter object from the letter constructor.
+					var newLetter = new letter.letter(answers.letter);
+
+					// Ensure empty blanks are displayed if the first user guess is incorrect.
+					if (guesses === 10) {
+						newLetter.displayBlanks();
+					}
+
+					// Run the comparison method on the letter constructor.
+					newLetter.compareLetters();
+
+					// If there are blanks remaining, add letter to letters guessed array and keep playing.
+					if (letter.visibleLetters.indexOf("_") !== -1) {
+						// Add the user's guess to an array.
+						lettersGuessed.push(answer);
+						// Display user guesses.
+						console.log(`\nLetters guessed: ${lettersGuessed.join(", ")}\n`);
+
+						// Decrement guesses by 1 and call recursive playGame function.
+						guesses--;
+						playGame(guesses);
+					}
+					// Otherwise, tell the user they got the answer and ask to play again.
+					else {
+						console.log("\nGreat Job!\n");
+						playAgain();
+					}
+				}
+				// If the letter has been guessed...
+				else {
+					console.log(`\nYou already guessed '${answer}'. Please try again.\n`);
+					playGame(guesses);
+				}
+			})
+		;
 	}
 
-var playGame = function(){
-	if(randomWord == 'doggy'){
-		var doggy = function(){	
-	 		inquirer.prompt({
-			name:"letter",
-			message: "Guess a letter!: "	
-		}).then(function(answer){			
-			if (answer.letter == 'd'){			
-				underscoresArray.shift();
-				underscoresArray.unshift("d");					
-			//x = true;
-			//break;
-				console.log(underscoresArray);
-				doggy();
-		}
-			else if (answer.letter == 'o'){			
-				underscoresArray.splice(1,1,'o');
-				console.log(underscoresArray);
-				//x = true;
-				doggy();
-			}
-			else if (answer.letter == 'g'){			
-				underscoresArray.splice(2,2,'g','g');
-				console.log(underscoresArray);
-				//x = true;
-				doggy();			
-			}
-			else if (answer.letter == 'y'){			
-				underscoresArray.splice(4,1,'y');
-				console.log(underscoresArray);
-				//x = true;
-				doggy();
-			}
-			//if else (answer.letter == 'g')				
-			else{
-				attempts--;
-				counter();
-			};	
-		if (attempts == 0){
-			console.log("You lose!");	
-			process.exit();
-		}
-		// if (underscoresArray == dogArray){
-		// 	console.log('WINNER!');
-		// 	process.exit();
-		// }		
-	});	
-	doggy();
-	}	
-	}	
-	else if(randomWord == 'kitty'){
-	var kitty = function(){	
-		 inquirer.prompt({
-		name:"letter",
-		message: "Guess a letter!: "	
-	}).then(function(answer){			
-			if (answer.letter == 'k'){			
-				underscoresArray.shift();
-				underscoresArray.unshift("k");					
-				//x = true;
-				//break;
-				console.log(underscoresArray);
-				kitty();
-			}
-			else if (answer.letter == 'i'){			
-				underscoresArray.splice(1,1,'i');
-				console.log(underscoresArray);
-				//x = true;
-				kitty();
-			}
-			else if (answer.letter == 't'){			
-				underscoresArray.splice(2,2,'t','t');
-				console.log(underscoresArray);
-				//x = true;
-				kitty();			
-			}
-			else if (answer.letter == 'y'){			
-				underscoresArray.splice(4,1,'y');
-				console.log(underscoresArray);
-				//x = true;
-				kitty();
-			}
-			//if else (answer.letter == 'g')				
-			else{
-				attempts--;
-				counter();
-			};	
-			if (attempts == 0){
-				console.log("You lose!");	
-				process.exit();
-			}
-			// if (underscoresArray == catArray){
-			// 	console.log('WINNER!');
-			// 	process.exit();
-			// }
-		});
-		}
-		kitty();
-	}		
+	// Once guesses equal 0, display game over message and ask to play again.
+	else {
+		console.log("Sorry, you're out of guesses.\n\n" +					
+					"Game Over.\n");
+		playAgain();
 	}
-playGame();
+}
+
+// Start the game.
+playGame(guesses);
+
+function playAgain() {
+	inquirer
+		// Ask if they want to play again.
+		.prompt([
+			{
+				type: "confirm",
+				message: "Do you want to play again?",
+				name: "confirm"
+			}
+		])
+		.then(answers => {
+			// If they do, reset the game.
+			if (answers.confirm) {
+				guesses = 10;
+				lettersGuessed = [];
+				playGame(guesses);
+			}
+			// Otherwise, log a game over message.
+			else {
+				console.log("Well, alright... This was fun! See ya next time!");
+			}
+		})
+	;
+}
